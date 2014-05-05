@@ -179,6 +179,8 @@ But I took them to court and did [["win", "lose", or "draw"?]]
 
         	// clear and make new slides
         	$('#slides').html('');
+        	var loading = $('<section>Loading...</section>');
+        	$('#slides').append(loading);
         	var slides = [];
         	for (var i = 0; i < lines.length; i++) {
         		// remove +'s that we added earlier for Google'
@@ -191,17 +193,20 @@ But I took them to court and did [["win", "lose", or "draw"?]]
         		slides.push(n);
         	}
 
-        	// unfortunately we can only call image search onces at a time,
+        	// unfortunately we can only call image search once at a time,
         	// so make serial async calls.
 	    	$('#slides, header').show();
+	    	Reveal.initialize();
         	function add_image(index) {
         		if (index == lines.length) {
         			// FINISHED
+        			loading.text("Ready!")
 			    	Reveal.initialize();
         			return;
         		}
         		image_search(lines[index], function(url) {
         			slides[index].find('img').attr('src', url);
+        			loading.text(lines.length - index);
         			add_image(index+1);
         		});
         	}
