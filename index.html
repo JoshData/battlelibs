@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+        <title>Battlelibs</title>
+        <meta name="description" content="A mad libs-like helper for creating a battledecks experience.">
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+		<link rel="stylesheet" href="reveal.js/css/reveal.min.css">
+		<link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme">
+
+        <style>
+            body {
+            	padding: 0;
+            	margin: 0;
+            }
+
+            header {
+            	padding: 4px 10px 10px 10px;
+            }
+            header input {
+            	font-size: 10px;
+            }
+
+            #templatediv, #getwordsdiv {
+            	margin: 2em;
+            }
+
+            #template {
+            	width: 100%;
+            	height: 20em;
+            	font-size: 18px;
+            }
+
+            #templatediv, #getwordsdiv {
+            	color: white;
+            	max-height: 75%;
+            	overflow: auto;
+            }
+
+            #wordsdiv tr {
+            	text-align: right;
+            }
+            #wordsdiv input, #wordsdiv label {
+            	font-size: 30px;
+            }
+            #wordsdiv input {
+            	padding: 4px;
+            }
+
+            #slides img {
+            	max-height: 50vh
+            }
+        </style>
+
+		<!--[if lt IE 9]>
+		<script src="reveal.js/lib/js/html5shiv.js"></script>
+		<![endif]-->
+    </head>
+    <body>
+    	<header>
+    		<input type="button" value="Edit Template" onclick="$('header, #slides, #getwordsdiv').hide(); $('#templatediv').show()"/>
+    		<input type="button" value="Get Words" onclick="$('header, #slides').hide(); $('#getwordsdiv').show()"/>
+    	</header>
+
+    	<div id="templatediv" style="display: none">
+    		<h2>Template</h2>
+    		<textarea id="template" wrap="virtual">
+My first Freedom of Information Act request
+I requested data about [[a dataset]]
+When I was young I wanted to be a [[occupation]]
+To rid the world of [[something disgusting]]
+Which was commonplace in my hometown of [[place]]
+Because the U.S. [[acronym]]A owned the data...
+...I emailed the agency's [[job title]]
+But they [[verb (past participle)]] my request
+I sent FOIA letter by [[animal]] to get their attention
+"Exempt from FOIA because [[reason not to publish data]]."
+But I took them to court and did [["win", "lose", or "draw"?]]
+[[a feeling]] is the moral of the story
+    		</textarea>
+
+    		<input type="button" value="OK" onclick="$('#templatediv').hide(); $('#getwordsdiv').show(); update_form(); "/>
+    	</div>
+
+    	<div id="getwordsdiv" style="display: none">
+    		<h2>Okay, I need some words from the audience!</h2>
+
+    		<table id="wordsdiv">
+    		</table>
+
+    		<input type="button" value="OK" onclick="$('#getwordsdiv').hide(); update_slides();"/>
+    	</div>  
+
+		<div class="reveal">
+			<div id="slides" class="slides" style="display: none">
+			</div>
+		</div>  	
+    
+		<footer id="branding">
+		</footer>
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+        <script>window.jQuery || document.write('<script src="assets/jquery-1.10.1.min.js"><\/script>')</script>
+	    <script src="https://www.google.com/jsapi"></script>
+
+		<script src="reveal.js/lib/js/head.min.js"></script>
+		<script src="reveal.js/js/reveal.min.js"></script>
+
+        <script>
+	    google.load('search', '1');
+	    var imageSearch;
+
+        $(function() {
+	        imageSearch = new google.search.ImageSearch();
+	        google.search.Search.getBranding('branding');
+	        imageSearch.setRestriction(
+			  google.search.Search.RESTRICT_SAFESEARCH,
+			  google.search.Search.SAFESEARCH_STRICT
+			);
+			imageSearch.setRestriction(
+			  google.search.ImageSearch.RESTRICT_IMAGESIZE,
+			  google.search.ImageSearch.IMAGESIZE_LARGE);
+
+			update_form();
+        });
+
+		String.prototype.splice = function(index, count, add) {
+			var str = this;
+			return str.slice(0, index) + add + str.slice(index + count);
+		}
+
+        function iterate_prompts(callback) {
+        	var lines = $('#template').val().split(/[\n\r]+/);
+        	for (var j = 0; j < lines.length; j++) {
+        		var line = lines[j];
+	        	var i = 0;
+	        	var dx = 0;
+				var regex = /\[\[([^\]]+)\]\]/g, result, indices = [];
+				while ( (result = regex.exec(line)) ) {
+				    var prompt = result[1];
+				    var replacement = callback(j, i, prompt);
+				    if (replacement) {
+				    	console.log(lines[j], replacement)
+				    	lines[j] = lines[j].splice(result.index+dx, result[0].length, replacement);
+				    	dx += (replacement.length - result[0].length)
+				    }
+				    i++;
+				}
+        	}
+        	return lines;
+        }
+
+        function update_form() {
+        	// clear and create new inputs
+        	$('#wordsdiv').html('');
+        	iterate_prompts(function(line, index, prompt) {
+			    var id = 'input_' + line + '_' + index;
+			    var n = $('<tr><td><label for="' + id + '"> </label><td> <td><input id="' + id + '"></tr>');
+			    n.find('label').text(prompt);
+			    $('#wordsdiv').append(n);
+        	});
+        }
+
+        function update_slides() {
+        	// do substitutions
+        	var lines = iterate_prompts(function(line, index, prompt) {
+        		var text = "";
+        		var w = $('#input_' + line + '_' + index).val().split(" ");
+        		for (var i = 0; i < w.length; i++)
+        			text += " +" + w[i];
+        		return text;
+        	});
+
+        	// clear and make new slides
+        	$('#slides').html('');
+        	var slides = [];
+        	for (var i = 0; i < lines.length; i++) {
+        		// remove +'s that we added earlier for Google'
+        		var text = lines[i].replace(/\+/g, '');
+
+        		// make slide HTML
+        		var n = $('<section class="slide"><h2/><img/></section>');
+        		n.find("h2").text(text);
+        		$("#slides").append(n);
+        		slides.push(n);
+        	}
+
+        	// unfortunately we can only call image search onces at a time,
+        	// so make serial async calls.
+	    	$('#slides, header').show();
+        	function add_image(index) {
+        		if (index == lines.length) {
+        			// FINISHED
+			    	Reveal.initialize();
+        			return;
+        		}
+        		image_search(lines[index], function(url) {
+        			slides[index].find('img').attr('src', url);
+        			add_image(index+1);
+        		});
+        	}
+        	add_image(0);
+        }
+
+        function image_search(query, callback) {
+	        imageSearch.setSearchCompleteCallback(this, function() {
+		        if (imageSearch.results && imageSearch.results.length > 0) {
+		        	callback(imageSearch.results[0].url)
+		        } else {
+		        	callback(null);
+		        }
+	        }, null);
+	        imageSearch.execute(query);
+        }
+        </script>
+
+    </body>
+</html>
