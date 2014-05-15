@@ -41,6 +41,7 @@
             	color: white;
             	max-height: 75%;
             	overflow: auto;
+            	font-family: sans-serif;
             }
 
             #wordsdiv tr {
@@ -49,8 +50,20 @@
             #wordsdiv input, #wordsdiv label {
             	font-size: 30px;
             }
+            #wordsdiv label {
+            	color: #AAA;
+            }
+	            #wordsdiv .active label {
+	            	color: white;
+	            	font-weight: bold;
+	            }
             #wordsdiv input {
             	padding: 4px;
+            	background-color: transparent;
+            	border-top: none;
+            	border-left: none;
+            	border-right: none;
+            	color: #FF4;
             }
 
             #slides img {
@@ -120,7 +133,7 @@
             if (user_data)
                 $('#template').val(user_data.tmpl);
 
-            // build the words form input
+			// create the input to fill in the blanks
 			update_form();
 
             // fill in any words
@@ -196,6 +209,11 @@
 			    n.find('label').text(prompt);
 			    $('#wordsdiv').append(n);
         	});
+
+        	$('#wordsdiv input').on('focus', function() {
+        		$('#wordsdiv tr').removeClass('active');
+        		$(this).parents("tr").addClass("active");
+        	})
         }
 
         function update_slides() {
